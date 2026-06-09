@@ -1,9 +1,10 @@
 """Build the single self-contained reproduction notebook for OMatG-IRL Section 4.2."""
+from pathlib import Path
+
 import nbformat as nbf
 from nbformat.v4 import new_code_cell, new_markdown_cell, new_notebook
 
-OMATG_DIR = "/home/changhae/OMatG-IRL/OMatG"
-EXP = "/home/changhae/OMatG-IRL/experiments"
+PKG_DIR = Path(__file__).resolve().parent  # <repo>/omatg_irl
 
 cells = []
 
@@ -40,11 +41,18 @@ the `omg` framework). The expensive 300-iteration runs are produced by
 also run a short live demo.
 """)
 
-code(f"""import os, sys, warnings, json
+code(r"""import os, sys, warnings, json
+from pathlib import Path
 warnings.filterwarnings("ignore")
-# Run from the OMatG package dir so the YAML's relative data paths (data/mp_20/...) resolve.
-os.chdir("{OMATG_DIR}")
-sys.path.insert(0, "/home/changhae/OMatG-IRL")
+
+# Locate the repo root portably (the directory containing the omatg_irl package),
+# searching upward from the notebook's working directory.
+_here = Path.cwd()
+REPO_ROOT = next((p for p in [_here, *_here.parents]
+                  if (p / "omatg_irl" / "__init__.py").exists()), _here)
+sys.path.insert(0, str(REPO_ROOT))
+EXP = str(REPO_ROOT / "experiments")
+# Data paths ("data/mp_20/...") resolve against the installed omg package, so no chdir is needed.
 os.environ.setdefault("CUDA_VISIBLE_DEVICES", "0")
 
 import numpy as np
@@ -52,7 +60,7 @@ import torch
 import matplotlib.pyplot as plt
 torch.set_float32_matmul_precision("high")
 torch.manual_seed(0)
-EXP = "{EXP}"
+print("repo root:", REPO_ROOT)
 print("torch", torch.__version__, "cuda", torch.cuda.is_available())""")
 
 md(r"""## 1. Load the pretrained Trig-SDE-Gamma checkpoint
@@ -283,7 +291,7 @@ nb = new_notebook(cells=cells, metadata={
     "kernelspec": {"display_name": "Python 3", "language": "python", "name": "python3"},
     "language_info": {"name": "python", "version": "3.12"},
 })
-out = "/home/changhae/OMatG-IRL/omatg_irl/reproduce_section_4_2.ipynb"
+out = PKG_DIR / "reproduce_section_4_2.ipynb"
 with open(out, "w") as f:
     nbf.write(nb, f)
 print("wrote", out, "with", len(cells), "cells")

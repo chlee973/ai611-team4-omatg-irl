@@ -3,7 +3,7 @@
 ## Context
 We reproduce the §4.2 results of *"Open Materials Generation with Inference-Time
 Reinforcement Learning"* (Höllmer & Martiniani, 2026) on top of the existing OMatG
-framework (`/home/changhae/OMatG-IRL/OMatG`). OMatG-IRL is a policy-gradient (GRPO/PPO)
+framework (`OMatG`). OMatG-IRL is a policy-gradient (GRPO/PPO)
 method that reinforces a pretrained continuous-time generative model **at inference time**
 by adding stochastic perturbations to the integration and optimizing a black-box reward —
 here the **negative MACE-MPA-0 energy/atom** — without retraining from scratch.

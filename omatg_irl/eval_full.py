@@ -28,10 +28,9 @@ from omg.datamodule.omg_data import OMGData
 from omg.datamodule.structure_dataset import StructureDataset
 from omatg_irl.checkpoint import get_pos_interpolant, load_lightning_module, split_policy_reference
 from omatg_irl.eval import deterministic_generate
+from omatg_irl.paths import EXPERIMENTS, TEST_LMDB
 from omatg_irl.policy import FullModelPolicy
 from omatg_irl.reward import is_invalid, omgdata_to_atoms
-
-TEST_LMDB = "data/mp_20/test.lmdb"
 
 
 def gen_all(policy, reference, gamma, sampler, ds, indices, n_steps, batch, device, seed=0):
@@ -79,7 +78,7 @@ def main():
     ap.add_argument("--limit", type=int, default=0, help="0 = full test set")
     ap.add_argument("--n-steps", type=int, default=50)
     ap.add_argument("--batch", type=int, default=256)
-    ap.add_argument("--out", default="../experiments/full_test_eval.json")
+    ap.add_argument("--out", default=str(EXPERIMENTS / "full_test_eval.json"))
     args = ap.parse_args()
     device = "cuda"
     ncpu = min(64, os.cpu_count())
@@ -111,8 +110,8 @@ def main():
           f"mean ref E/atom={ref_epa_mean:.3f}", flush=True)
 
     models = [("baseline (pretrained, Nt=50)", reference_model.state_dict()),
-              ("velocity-based OMatG-IRL", "../experiments/full_velocity/policy_best.pt"),
-              ("score-based OMatG-IRL", "../experiments/full_score/policy_best.pt")]
+              ("velocity-based OMatG-IRL", str(EXPERIMENTS / "full_velocity" / "policy_best.pt")),
+              ("score-based OMatG-IRL", str(EXPERIMENTS / "full_score" / "policy_best.pt"))]
 
     results = {}
     for name, sd in models:

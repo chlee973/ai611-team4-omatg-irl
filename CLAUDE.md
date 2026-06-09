@@ -21,11 +21,13 @@ Layout:
 
 ## Environment & invariants
 
-- **Activate:** `source /home/changhae/OMatG-IRL/.venv/bin/activate` (built with `uv`, not
-  `python -m venv`; the host has no `venv`/`conda`/sudo). torch 2.8.0+cu128, `torch_scatter`
-  from the PyG wheel index, `omg` editable, `mace-torch`.
-- **Run from `OMatG/`.** Configs/datasets use paths relative to the `omg` package dir
-  (`data/mp_20/...`), so commands and scripts must `cd OMatG` (or the code does `os.chdir`).
+- **Activate:** `source .venv/bin/activate` from the repo root (built with `uv`, not
+  `python -m venv`; the original host had no `venv`/`conda`/sudo). torch 2.8.0+cu128,
+  `torch_scatter` from the PyG wheel index, `omg` editable, `mace-torch`.
+- **Paths are portable.** The `omatg_irl` code derives all locations from `omatg_irl/paths.py`
+  (relative to the package), and dataset paths like `data/mp_20/...` resolve against the
+  installed `omg` package (`files("omg")`), so scripts run from any cwd. The upstream `omg`
+  CLI (`omg predict`, etc.) still expects `cd OMatG` for its YAML-relative data paths.
 - **GPUs 0 and 1 only** (`CUDA_VISIBLE_DEVICES`). The box has 8× RTX A5000 but only 0,1 are ours.
 - **Positions are fractional** on the torus `[0,1)^3`; the model predicts the velocity in
   fractional space. All position math uses minimum-image displacements (`utils_pbc`).
@@ -35,19 +37,24 @@ Layout:
 ## Common commands
 
 ```bash
-cd /home/changhae/OMatG-IRL/OMatG && source ../.venv/bin/activate
+# From the repo root (paths are portable; data resolves via the installed omg package):
+source .venv/bin/activate
 
 # Correctness gates (no MACE) — fast sanity check of the whole RL loop, per variant:
-python ../omatg_irl/verify_gates.py velocity     # or: score
+python omatg_irl/verify_gates.py velocity     # or: score
 
-# Full training (one variant per GPU, ~3 h each at G=32):
-CUDA_VISIBLE_DEVICES=0 python ../omatg_irl/train.py --mode velocity --out ../experiments/full_velocity --n-iters 300 --group-size 32
-CUDA_VISIBLE_DEVICES=1 python ../omatg_irl/train.py --mode score    --out ../experiments/full_score    --n-iters 300 --group-size 32 --distill-weight 1e-4
+# Full training (one variant per GPU, ~1.8-3 h each at G=32):
+CUDA_VISIBLE_DEVICES=0 python omatg_irl/train.py --mode velocity --out experiments/full_velocity --n-iters 200 --group-size 32
+CUDA_VISIBLE_DEVICES=1 python omatg_irl/train.py --mode score    --out experiments/full_score    --n-iters 200 --group-size 32 --distill-weight 1e-4
+
+# Full MP-20 test-set evaluation (paper-comparable):
+python omatg_irl/eval_full.py --limit 0
 
 # Rebuild the reproduction notebook from its builder:
-python ../omatg_irl/build_notebook.py            # -> omatg_irl/reproduce_section_4_2.ipynb
+python omatg_irl/build_notebook.py               # -> omatg_irl/reproduce_section_4_2.ipynb
 
-# Baseline using the upstream CLI (heavier weight-load gate / paper-parity check):
+# Baseline using the upstream CLI (heavier weight-load gate / paper-parity check), run from OMatG/:
+cd OMatG
 CKPT=$(python -c "from huggingface_hub import snapshot_download as s; print(s('OMatG/MP-20-CSP', allow_patterns=['Trig-SDE-Gamma/*']))")/Trig-SDE-Gamma
 omg predict --config "$CKPT/train.yaml" --ckpt_path "$CKPT/checkpoint.ckpt" --model.generation_xyz_filename gen.xyz --trainer.limit_predict_batches 2
 omg csp_metrics --config "$CKPT/train.yaml" --xyz_file gen.xyz
