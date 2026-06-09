@@ -21,8 +21,8 @@ here the **negative MACE-MPA-0 energy/atom** — without retraining from scratch
   2. **Pluggable reward** — a `Reward` interface: §4.2 = energy; §4.3 = cRMSE.
   The only real §4.3 blocker remains the checkpoint pretraining, not the code.
 
-**GPUs:** use 0,1 (RTX A5000 24 GB). Tiny validation on GPU 0; full runs spread the two variants
-across GPU 0 (velocity) and GPU 1 (score).
+**Compute:** a CUDA GPU. Full runs can spread the two variants across two GPUs (one each) via
+`CUDA_VISIBLE_DEVICES`, or run sequentially on a single GPU.
 
 ## Environment setup
 Fresh system Python 3.12, CUDA 12.8, no torch/conda. Create a project venv:
@@ -79,7 +79,7 @@ KL `β`, denoiser `δ` from the App.F choice sets (start `β=1e-4`, `δ=1e-4`), 
 S-normalization, 300 iterations. (`velocity_annealing=0`.) Exact best HP values aren't published —
 these are mid-range picks inside the published search ranges.
 
-## Verification (cheap gates before any 300-iter run; GPU 0, G=8, 2 groups, 5 iters)
+## Verification (cheap gates before any 300-iter run; single GPU, G=8, 2 groups, 5 iters)
 1. `q_t=1` (|log q|<1e-5) at first PPO epoch. 2. `KL=0` at init. 3. KL grows / q deviates after an update.
 4. Finite-difference check of `∂(−‖x'−μᶿ‖²/2v)` vs autograd. 5. Reward trends up / MACE e/atom down.
 6. COM invariance (per-structure mean displacement ≈0; cell path bitwise-equal to frozen ODE).
@@ -88,8 +88,8 @@ these are mid-range picks inside the published search ranges.
 
 ## Single reproduction notebook: `omatg_irl/reproduce_section_4_2.ipynb`
 Env check → download `OMatG/MP-20-CSP/Trig-SDE-Gamma` (huggingface_hub) → load policy+reference →
-**baseline gen + metrics (correctness gate)** → build 16 groups → **velocity-based** RL training (GPU 0) →
-**score-based** RL training (GPU 1) → Fig.3-style 4-panel curves (rel-energy/atom, match rate, RMSE,
+**baseline gen + metrics (correctness gate)** → build 16 groups → **velocity-based** RL training →
+**score-based** RL training → Fig.3-style 4-panel curves (rel-energy/atom, match rate, RMSE,
 invalid-energy-rate vs iteration; velocity vs score) → **final test-set eval** table vs baseline →
 save checkpoints/metrics/figures.
 

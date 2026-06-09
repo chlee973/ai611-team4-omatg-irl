@@ -118,14 +118,14 @@ print("group sizes:", torch.bincount(group_ids).tolist())""")
 
 md(r"""## 4. RL training (both variants)
 
-The full results in this notebook come from the 300-iteration background runs:
+The full results in this notebook come from the background runs (one variant per GPU; set
+`CUDA_VISIBLE_DEVICES` per process, or run them sequentially on a single GPU):
 
 ```bash
-# velocity-based (GPU 0) and score-based (GPU 1)
 python omatg_irl/train.py --mode velocity --out experiments/full_velocity \
-    --n-iters 300 --group-size 32 --eval-every 10 --eval-n 128
+    --n-iters 200 --group-size 32 --eval-every 10 --eval-n 128
 python omatg_irl/train.py --mode score    --out experiments/full_score \
-    --n-iters 300 --group-size 32 --eval-every 10 --eval-n 128 --distill-weight 1e-4
+    --n-iters 200 --group-size 32 --eval-every 10 --eval-n 128 --distill-weight 1e-4
 ```
 
 Set `RUN_DEMO = True` to run a short live training loop instead (≈ a few minutes).""")

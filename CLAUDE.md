@@ -28,7 +28,8 @@ Layout:
   (relative to the package), and dataset paths like `data/mp_20/...` resolve against the
   installed `omg` package (`files("omg")`), so scripts run from any cwd. The upstream `omg`
   CLI (`omg predict`, etc.) still expects `cd OMatG` for its YAML-relative data paths.
-- **GPUs 0 and 1 only** (`CUDA_VISIBLE_DEVICES`). The box has 8× RTX A5000 but only 0,1 are ours.
+- **Multi-GPU:** run one variant per GPU by setting `CUDA_VISIBLE_DEVICES` (see commands below);
+  a single GPU works too (run the variants sequentially).
 - **Positions are fractional** on the torus `[0,1)^3`; the model predicts the velocity in
   fractional space. All position math uses minimum-image displacements (`utils_pbc`).
 - **Datasets must be loaded with `floating_point_precision="32-true"`** — the default is

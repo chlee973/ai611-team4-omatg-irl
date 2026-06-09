@@ -31,7 +31,7 @@ pipeline (checkpoint → baseline → groups → RL training → Fig. 3 curves �
 
 ## Setup
 
-Requires CUDA (developed on RTX A5000, CUDA 12.8) and Python 3.11–3.13.
+Requires a CUDA GPU (CUDA 12.8 toolchain) and Python 3.11–3.13.
 
 ```bash
 # 1. Clone the upstream OMatG framework alongside this repo (pinned commit)
